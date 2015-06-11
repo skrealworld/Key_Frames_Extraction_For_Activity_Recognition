@@ -1,32 +1,44 @@
 clc;
 clear all;
+DBpath='C:\Users\sk1846\Desktop\Matconvnet\Small UCF101_20\'; % DataBase path 
+load('ClassLabels.mat')
 count_smpl=1;
 count_idx=0;
 label=1;
-class_path= {,,,,,,,,,,};
-for f=1:5
-    if(rem(f,35)==0)
-        label=label+1;
+noOfSamp1Vid=35;
+for f1=1:20
+    sprintf('On class number %d',f1);
+    for f2=1:noOfSamp1Vid   
+         sprintf('On class number %d and video number %d',f1,f2);
+        %vidobj=VideoReader(['/Users/sourabhkulhare/Documents/MATLAB/3DSIFT_CODE_v1/Small_test/v',num2str(f),'.avi']);
+        % obj=VideoReader(['C:\Users\sk1846\Desktop\Matconvnet\Small UCF101_20\FrontCrawl\frontcrawl (',num2str(f),').avi']);
+        %a=strcat(DBpath,ClassLabels{f1},'\',ClassLabels{f1},' (',num2str(f2),').avi');
+        obj=VideoReader(strcat(DBpath,classNames{f1},'\',classNames{f1},' (',num2str(f2),').avi'));
+        
+            nFrames=obj.NumberOfFrames;
+            n1=1;
+            for n1=5:20:nFrames
+                t_dim=0;
+                for n2=n1-4:n1+5
+                    t_dim=t_dim+1;
+                    if(n2>=nFrames)
+                        break;
+                    end
+                    idx=(720*count_idx)+1;
+                    im=read(obj,n2);
+                    frame(idx:idx+240-1,:,:)=im(:,:,1);
+                    frame(idx+240:idx+480-1,:,:)=im(:,:,2);
+                    frame(idx+480:idx+720-1,:,:)=im(:,:,3);
+                    count_idx=count_idx+1;
+                    vid_data(:,:,t_dim,count_smpl)=frame(idx:idx+720-1,:);
+                end
+                Y(count_smpl)=label;
+                count_smpl=count_smpl+1;
+                n1=n1+1;
+            end
+            sprintf('Number of samples of %d th video of class %d is %d',f2,f1,n1);
     end
-%vidobj=VideoReader(['/Users/sourabhkulhare/Documents/MATLAB/3DSIFT_CODE_v1/Small_test/v',num2str(f),'.avi']);
-obj=VideoReader(['C:\Users\sk1846\Desktop\Matconvnet\Small UCF101_20\FrontCrawl\frontcrawl (',num2str(f),').avi']);
-nFrames=obj.NumberOfFrames;
-for n1=5:20:nFrames
-    t_dim=0;
-for n2=n1-4:n1+5
-    t_dim=t_dim+1;
-    if(n2>=nFrames)
-       break; 
-    end
-idx=(720*count_idx)+1;
-im=read(obj,n2);
-frame(idx:idx+240-1,:,:)=im(:,:,1);
-frame(idx+240:idx+480-1,:,:)=im(:,:,2);
-frame(idx+480:idx+720-1,:,:)=im(:,:,3);
-count_idx=count_idx+1;
-vid_data(:,:,t_dim,count_smpl)=frame(idx:idx+720-1,:); 
+    lable=label+1;
 end
-Y(count_smpl)=label;
-count_smpl=count_smpl+1;
-end
-end
+save('vid_data.mat','vid_data');
+save('vid_data_labels.mat','Y');
