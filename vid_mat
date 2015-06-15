@@ -6,7 +6,7 @@ count_smpl=1;
 count_idx=0;
 label=1;
 noOfSamp1Vid=35;
-for f1=1:20
+for f1=1:5
     sprintf('On class number %d',f1);
     for f2=1:noOfSamp1Vid   
          sprintf('On class number %d and video number %d',f1,f2);
@@ -31,6 +31,7 @@ for f1=1:20
                     frame(idx+480:idx+720-1,:,:)=im(:,:,3);
                     count_idx=count_idx+1;
                     vid_data(:,:,t_dim,count_smpl)=frame(idx:idx+720-1,:);
+                    clear frame;
                 end
                 Y(count_smpl)=label;
                 count_smpl=count_smpl+1;
@@ -40,5 +41,5 @@ for f1=1:20
     end
     lable=label+1;
 end
-save('vid_data.mat','vid_data');
-save('vid_data_labels.mat','Y');
+save('vid_data1_5.mat','vid_data');
+save('vid_data_labels1_5.mat','Y');
