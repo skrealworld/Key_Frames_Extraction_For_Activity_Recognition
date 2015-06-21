@@ -1,42 +1,40 @@
 clc;
 clear all;
-DBpath='C:\Users\sa5641\Desktop\videoClassification\SubDataUCF101\'; % DataBase path 
-load('ClassLabels.mat')
+DBpath='C:\Users\sk1846\Desktop\Matconvnet\Small UCF101_20\'; % DataBase path 
+load('ClassLabels.mat') % Load the labeled mat file for classNames.
 count_smpl=1;
 count_idx=0;
 label=1;
-noOfSamp1Vid=1;
-for f1=1:10
-    
-    for f2=1:noOfSamp1Vid
-        if(rem(f2,35)==0)
-            label=label+1;
-        end
-        
-        %vidobj=VideoReader(['/Users/sourabhkulhare/Documents/MATLAB/3DSIFT_CODE_v1/Small_test/v',num2str(f),'.avi']);
-        % obj=VideoReader(['C:\Users\sk1846\Desktop\Matconvnet\Small UCF101_20\FrontCrawl\frontcrawl (',num2str(f),').avi']);
-        a=strcat(DBpath,ClassLabels{f1},'\',ClassLabels{f1},' (',num2str(f2),').avi')
-        obj=VideoReader(strcat(DBpath,ClassLabels{f1},'\',ClassLabels{f1},' (',num2str(f2),').avi'));
-        
-            nFrames=obj.NumberOfFrames;
-        
-            for n1=5:20:nFrames
+noOfSamp1Vid=35;    % Define the number if training videos from each class. 
+for f1=20     % Define the number of classes.
+    for f2=1:noOfSamp1Vid   
+        obj=VideoReader(strcat(DBpath,classNames{f1},'\',classNames{f1},' (',num2str(f2),').avi')); %Access the video.
+            nFrames=obj.NumberOfFrames; % Get the number of frames. 
+            n10=1; 
+            for n1=5:20:nFrames   
                 t_dim=0;
                 for n2=n1-4:n1+5
                     t_dim=t_dim+1;
-                    if(n2>=nFrames)
+                    if(n2>=nFrames)    
                         break;
                     end
-                    idx=(720*count_idx)+1;
-                    im=read(obj,n2);
-                    frame(idx:idx+240-1,:,:)=im(:,:,1);
-                    frame(idx+240:idx+480-1,:,:)=im(:,:,2);
-                    frame(idx+480:idx+720-1,:,:)=im(:,:,3);
+                    idx=(180*count_idx)+1;
+                    im=read(obj,n2);   % Read the selected frame. 
+                    im=imresize(im,[60,80]) % Change the resolution from 240x320 to 60x80. 
+                    frame(idx:idx+60-1,:,:)=im(:,:,1);          % Stacking all three(R,G,B) components of image. 
+                    frame(idx+60:idx+120-1,:,:)=im(:,:,2);
+                    frame(idx+120:idx+180-1,:,:)=im(:,:,3);
                     count_idx=count_idx+1;
-                    vid_data(:,:,t_dim,count_smpl)=frame(idx:idx+720-1,:);
+                    vid_data(:,:,t_dim,count_smpl)=frame(idx:idx+180-1,:);
+                    clear frame;
                 end
                 Y(count_smpl)=label;
                 count_smpl=count_smpl+1;
+                n10=n10+1;
             end
+            sprintf('Number of samples of %d th video of class %d is %d',f2,f1,n1)
     end
+    lable=label+1;
 end
+save('vid_data_training.mat','vid_data');
+save('vid_data_training_labels.mat','Y');
