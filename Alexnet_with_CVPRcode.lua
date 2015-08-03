@@ -7,32 +7,39 @@ require 'image'
 require 'mattorch'
 require 'cudnn'
 require 'cunn'
-
+require 'cutorch'
 ---------------------------dataset setup--------------------
-file_train = torch.load('training20.t7');
-file_train_labels =torch.load('trainingY20.t7');
-file_test= torch.load('test20.t7');
-file_test_labels= torch.load('testY20.t7');
+file_train = mattorch.load('~/VideoClassification/dataSet/Subdatabase/Xdata_train20.mat');
+file_train_labels =mattorch.load('~/VideoClassification/dataSet/Subdatabase/Ydata_train20.mat');
+file_test= mattorch.load('~/VideoClassification/dataSet/Subdatabase/Xdata_testing20.mat');
+file_test_labels= mattorch.load('~/VideoClassification/dataSet/Subdatabase/Ydata_testing20.mat');
 trainset = {};
-trainset.data =   file_train.Xdata_train; 
-trainset.label =   file_test_labels.Ydata_train;
+trainset.data = file_train.Xdata_train:double(); 
+trainset.label = file_train_labels.Ydata_train[{{},1}];
+print(trainset)
+print(trainset.data:dim())
 testset = {};
-testset.data = file_test.Xdata_testing20;
-testset.label = file_test_labels.Ydata_testing20;                  --torch.load('/Users/SK_Mac/cifar10-test.t7')
+testset.data = file_test.Xdata_testing20:double();
+testset.label = file_test_labels.Ydata_testing20[{{},1}];
+print(testset)                  --torch.load('/Users/SK_Mac/cifar10-test.t7')
 ---testset = torch.load('/Users/SK_Mac/cifar10-test.t7')
 classes = {'Archery','Basketball'  ,  'BasketballDunk' ,   'Biking',    'Bowling' ,  'BoxingPunchingBag' ,'BoxingSpeedBag' ,   'BreastStroke' , 'CricketBowling' ,   'CricketShot' ,  'Diving'   , 'FrontCrawl'  ,  'HighJump'  ,'HorseRace' ,'HorseRiding' ,  'LongJump'  ,'SkyDiving' ,'SoccerPenalty' ,'Surfing'   ,'TableTennisShot'}
 ---print(trainset)
 ---print(#trainset.data)
---setmetatable(trainset, 
---    {__index = function(t, i) 
---                    return {t.data[i], t.label[i]} 
---                end}
---);
-trainset.data = trainset.data:double() -- convert the data from a ByteTensor to a DoubleTensor.
+setmetatable(trainset, 
+    {__index = function(t, i) 
+                    return {t.data[i], t.label[i]} 
+                end}
+);
+--trainset.data = trainset.data:cuda()
+--trainset.data = trainset.data:cuda() -- convert the data from a ByteTensor to a DoubleTensor.
+trainset.data = trainset.data:cuda();
+trainset.label = trainset.label:cuda();
+--classes = classes:cuda();
 
---function trainset:size() 
---    return self.data:size(1) 
---end
+function trainset:size() 
+    return self.data:size(1) 
+end
 --print(trainset:size()) -- just to test
 --print(trainset[33]) -- load sample number 33.
 --image.display(trainset[33][1])
@@ -117,6 +124,7 @@ end
 --fillBias(features)
 --fillBias(classifier)
 model:add(features):add(classifier)
+model=model:cuda()
 
 
 -----------------------------------------Alex net end--------------------------------
@@ -140,6 +148,7 @@ net:add(nn.LogSoftMax())                     -- converts the output to a log-pro
 -------------------------------------------------------------------------------------
 
 criterion = nn.ClassNLLCriterion()
+criterion = criterion:cuda()
 
 trainer = nn.StochasticGradient(model, criterion)
 trainer.learningRate = 0.001
@@ -150,7 +159,8 @@ trainer:train(trainset)
 --print(classes[testset.label[100]])
 --image.display(testset.data[100])
 
-testset.data = testset.data:double()   -- convert from Byte tensor to Double tensor
+testset.data = testset.data:cuda()   -- convert from Byte tensor to Double tensor
+--testset.data = testset.data:cuda()
 for i=1,10 do -- over each image channel
     testset.data[{ {}, {i}, {}, {}  }]:add(-mean[i]) -- mean subtraction    
     testset.data[{ {}, {i}, {}, {}  }]:div(stdv[i]) -- std scaling
@@ -194,5 +204,3 @@ end
 --for i=1,#classes do
 --    print(classes[i], 100*class_performance[i]/1000 .. ' %')
 --end
-
-
